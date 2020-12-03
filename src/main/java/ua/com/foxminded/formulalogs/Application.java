@@ -4,10 +4,10 @@ import java.io.IOException;
 
 public class Application {
 
-    static final String LOG_FILE_PATH = "c:/workspace/FormulaLogs/logfiles/";
-    static final String ABBREVIATIONS = "abbreviations.txt";
-    static final String START_LOG = "start.log";
-    static final String END_LOG = "end.log";
+    public static final String LOG_FILE_PATH = "c:/workspace/FormulaLogs/logfiles/";
+    public static final String ABBREVIATIONS = "abbreviations.txt";
+    public static final String START_LOG = "start.log";
+    public static final String END_LOG = "end.log";
 
     public static void main(String[] args) {
 
