@@ -15,7 +15,6 @@ public class Application {
             new LogsAnalyzer().doLogAnalyzingRoutine();
         } catch (IOException e) {
             System.out.println("IOException: " + e.getMessage());
-
         }
     }
 

@@ -10,8 +10,13 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+interface Abbr {
+    String getAbbr(String e);
+}
 
 public class LogsAnalyzer {
     public static final String INITIAL_SEPARATOR = "_";
@@ -23,39 +28,37 @@ public class LogsAnalyzer {
     public static final int ABBREVIATIONS_CHARS_QUANTITY = 3;
     public static final int TOP_LIST_QTY = 15;
     public static final int TIMESTAMP_LENGTH = 8;// for instance, 1:13.393
-    
-    
+     
     public void doLogAnalyzingRoutine() throws IOException {
         Stream<String> startLogStream = Files.lines(Paths.get(Application.LOG_FILE_PATH + Application.START_LOG));
         Stream<String> endLogStream   = Files.lines(Paths.get(Application.LOG_FILE_PATH + Application.END_LOG));
         List<String> abbrListFromFile = Files.lines(Paths.get(Application.LOG_FILE_PATH, Application.ABBREVIATIONS))
                 .collect(Collectors.toList());
+        AtomicInteger itemNumber = new AtomicInteger();
+        
+        UnaryOperator<String> logAbbreviation =  e -> e.substring(STRING_BEGINNING, ABBREVIATIONS_CHARS_QUANTITY);
+        UnaryOperator<String> logData =  e -> e.substring(e.indexOf(INITIAL_SEPARATOR) + 1, e.length());
         
         //make a map of abbreviations to use later for finalList. all map items are prolonged by spaces  
         Map<String, String> abbreviationsMap = abbrListFromFile.stream()
             .map(e -> getNamesProlongedBySpaces(e, abbrListFromFile))
-            .collect(Collectors.toMap(e -> e.substring(STRING_BEGINNING, e.indexOf(INITIAL_SEPARATOR)),
-                        e -> e.substring(e.indexOf(INITIAL_SEPARATOR) + 1, e.length())
-                            .replace("_", NEW_SEPARATOR)));
-        //System.out.println(abbreviationsMap.toString());
-
+            .collect(Collectors.toMap(logAbbreviation, logData));
+        
         Map<String, String> endLogMap = endLogStream
-                .collect(Collectors.toMap(e -> e.substring(STRING_BEGINNING, ABBREVIATIONS_CHARS_QUANTITY),
-                e -> e.substring(e.indexOf(INITIAL_SEPARATOR) + 1, e.length())));
+                .collect(Collectors.toMap(logAbbreviation, logData));
         endLogStream.close();
         
-        AtomicInteger itemNumber = new AtomicInteger();
-        
+        UnaryOperator<String> lapTime = e -> e.substring(e.lastIndexOf(SPACE_CHAR), e.length());
         List<String> finalList = startLogStream
                 .map(e -> calculateTheLapTime(e, endLogMap))
-                .sorted(Comparator.comparing(e -> e.substring(e.lastIndexOf(SPACE_CHAR), e.length())))
+                .sorted(Comparator.comparing(lapTime))
                 .map(e -> abbreviationsMap.get(e.substring(STRING_BEGINNING, ABBREVIATIONS_CHARS_QUANTITY))
                         + e.substring(ABBREVIATIONS_CHARS_QUANTITY, e.length()))
                 .map(e -> addNumeration(e, itemNumber))
+                .map(e -> e.replace(INITIAL_SEPARATOR, NEW_SEPARATOR))
                 .collect(Collectors.toList());
         startLogStream.close();
         finalList.forEach(System.out::println);
-
     }
     
     public String addNumeration(String stringToNumerate, AtomicInteger number) {
@@ -87,27 +90,30 @@ public class LogsAnalyzer {
                 , initialString.lastIndexOf(INITIAL_SEPARATOR));
         String teamName = initialString.substring(initialString.lastIndexOf(INITIAL_SEPARATOR)+1 
                 , initialString.length());
+        
         String nameWithSpaces = name + Stream.generate(() -> SPACE_CHAR)
             .limit(getTheLongestNameLength(abbrList) - name.length())
             .collect(Collectors.joining());
         String teamNameWithSpaces = teamName + Stream.generate(() -> SPACE_CHAR)
-                .limit(getTheLongestTeamNameLength(abbrList) - teamName.length())
-                .collect(Collectors.joining());
+            .limit(getTheLongestTeamNameLength(abbrList) - teamName.length())
+            .collect(Collectors.joining());
         return initialString.replace(name, nameWithSpaces).replace(teamName, teamNameWithSpaces);
     }
-
+    
     public int getTheLongestNameLength(List<String> initialList){
+        UnaryOperator<String> cutTheName = e -> e.substring(e.indexOf(INITIAL_SEPARATOR)+1, e.lastIndexOf(INITIAL_SEPARATOR));
         return initialList.stream()
-                .map(e -> e.substring(e.indexOf(INITIAL_SEPARATOR)+1, e.lastIndexOf(INITIAL_SEPARATOR))) 
-                .mapToInt(String::length)
-                .max().orElse(0);
+            .map(cutTheName) 
+            .mapToInt(String::length)
+            .max().orElse(0);
     }
     
     public int getTheLongestTeamNameLength(List<String> initialList) {
+        UnaryOperator<String> cutTheTeamName = e -> e.substring(e.lastIndexOf(INITIAL_SEPARATOR)+1 , e.length());
         return initialList.stream()
-                .map(e -> e.substring(e.lastIndexOf(INITIAL_SEPARATOR)+1 , e.length()))
-                .mapToInt(String::length)
-                .max().orElse(0);
+            .map(cutTheTeamName)
+            .mapToInt(String::length)
+            .max().orElse(0);
     }
 }
 
