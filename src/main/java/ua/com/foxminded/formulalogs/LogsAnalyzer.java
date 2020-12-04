@@ -14,10 +14,6 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-interface Abbr {
-    String getAbbr(String e);
-}
-
 public class LogsAnalyzer {
     public static final String INITIAL_SEPARATOR = "_";
     public static final String NEW_SEPARATOR = " | ";
@@ -30,35 +26,45 @@ public class LogsAnalyzer {
     public static final int TIMESTAMP_LENGTH = 8;// for instance, 1:13.393
      
     public void doLogAnalyzingRoutine() throws IOException {
-        Stream<String> startLogStream = Files.lines(Paths.get(Application.LOG_FILE_PATH + Application.START_LOG));
-        Stream<String> endLogStream   = Files.lines(Paths.get(Application.LOG_FILE_PATH + Application.END_LOG));
-        List<String> abbrListFromFile = Files.lines(Paths.get(Application.LOG_FILE_PATH, Application.ABBREVIATIONS))
+        Stream<String> startLogStream;
+        Stream<String> endLogStream;
+        List<String> abbrListFromFile;
+        startLogStream = Files.lines(Paths.get(Application.LOG_FILE_PATH + Application.START_LOG));
+        endLogStream = Files.lines(Paths.get(Application.LOG_FILE_PATH + Application.END_LOG));
+        abbrListFromFile = Files.lines(Paths.get(Application.LOG_FILE_PATH, Application.ABBREVIATIONS))
                 .collect(Collectors.toList());
+    
         AtomicInteger itemNumber = new AtomicInteger();
         
         UnaryOperator<String> logAbbreviation =  e -> e.substring(STRING_BEGINNING, ABBREVIATIONS_CHARS_QUANTITY);
         UnaryOperator<String> logData =  e -> e.substring(e.indexOf(INITIAL_SEPARATOR) + 1, e.length());
+        UnaryOperator<String> getAlignedNames = e -> getNamesProlongedBySpaces(e, abbrListFromFile);
         
         //make a map of abbreviations to use later for finalList. all map items are prolonged by spaces  
         Map<String, String> abbreviationsMap = abbrListFromFile.stream()
-            .map(e -> getNamesProlongedBySpaces(e, abbrListFromFile))
+            .map(getAlignedNames)
             .collect(Collectors.toMap(logAbbreviation, logData));
         
         Map<String, String> endLogMap = endLogStream
                 .collect(Collectors.toMap(logAbbreviation, logData));
         endLogStream.close();
         
-        UnaryOperator<String> lapTime = e -> e.substring(e.lastIndexOf(SPACE_CHAR), e.length());
-        List<String> finalList = startLogStream
-                .map(e -> calculateTheLapTime(e, endLogMap))
-                .sorted(Comparator.comparing(lapTime))
-                .map(e -> abbreviationsMap.get(e.substring(STRING_BEGINNING, ABBREVIATIONS_CHARS_QUANTITY))
-                        + e.substring(ABBREVIATIONS_CHARS_QUANTITY, e.length()))
-                .map(e -> addNumeration(e, itemNumber))
-                .map(e -> e.replace(INITIAL_SEPARATOR, NEW_SEPARATOR))
-                .collect(Collectors.toList());
+        UnaryOperator<String> calculateLapTime = e -> calculateTheLapTime(e, endLogMap);
+        UnaryOperator<String> cutTheLapTime = e -> e.substring(e.lastIndexOf(SPACE_CHAR), e.length());
+        UnaryOperator<String> replaceAbbreviationsWithFullNames = e -> e.replace(e.substring(STRING_BEGINNING, ABBREVIATIONS_CHARS_QUANTITY)
+                , abbreviationsMap.get(e.substring(STRING_BEGINNING, ABBREVIATIONS_CHARS_QUANTITY)));
+        UnaryOperator<String> addNumeration = e -> addNumeration(e, itemNumber);
+        UnaryOperator<String> replaceSeparator = e -> e.replace(INITIAL_SEPARATOR, NEW_SEPARATOR);
+
+        startLogStream
+                .map(calculateLapTime)
+                .sorted(Comparator.comparing(cutTheLapTime))
+                .map(replaceAbbreviationsWithFullNames)
+                .map(addNumeration)
+                .map(replaceSeparator)
+                .reduce((e1, e2) -> e1 + "\n" + e2)
+                .ifPresent(System.out::println);
         startLogStream.close();
-        finalList.forEach(System.out::println);
     }
     
     public String addNumeration(String stringToNumerate, AtomicInteger number) {
@@ -116,4 +122,3 @@ public class LogsAnalyzer {
             .max().orElse(0);
     }
 }
-
