@@ -24,27 +24,25 @@ public class LogsAnalyzer {
     public static final int ABBREVIATIONS_CHARS_QUANTITY = 3;
     public static final int TOP_LIST_QTY = 15;
     public static final int TIMESTAMP_LENGTH = 8;// for instance, 1:13.393
-     
+    
     public void doLogAnalyzingRoutine() throws IOException {
         Stream<String> startLogStream;
         Stream<String> endLogStream;
-        List<String> abbrListFromFile;
-        startLogStream = Files.lines(Paths.get(Application.LOG_FILE_PATH + Application.START_LOG));
-        endLogStream = Files.lines(Paths.get(Application.LOG_FILE_PATH + Application.END_LOG));
-        abbrListFromFile = Files.lines(Paths.get(Application.LOG_FILE_PATH, Application.ABBREVIATIONS))
-                .collect(Collectors.toList());
-    
         AtomicInteger itemNumber = new AtomicInteger();
+        Stream<String> abbrStream = getStreamFromFile(Application.LOG_FILE_PATH + Application.ABBREVIATIONS);
+        List<String> abbrList = abbrStream.collect(Collectors.toList());
+        abbrStream.close();
         
         UnaryOperator<String> logAbbreviation =  e -> e.substring(STRING_BEGINNING, ABBREVIATIONS_CHARS_QUANTITY);
         UnaryOperator<String> logData =  e -> e.substring(e.indexOf(INITIAL_SEPARATOR) + 1, e.length());
-        UnaryOperator<String> getAlignedNames = e -> getNamesProlongedBySpaces(e, abbrListFromFile);
-        
+        UnaryOperator<String> getAlignedNames = e -> getNamesProlongedBySpaces(e, abbrList);
+
         //make a map of abbreviations to use later for finalList. all map items are prolonged by spaces  
-        Map<String, String> abbreviationsMap = abbrListFromFile.stream()
+        Map<String, String> abbreviationsMap = abbrList.stream()
             .map(getAlignedNames)
             .collect(Collectors.toMap(logAbbreviation, logData));
         
+        endLogStream = getStreamFromFile(Application.LOG_FILE_PATH + Application.END_LOG);
         Map<String, String> endLogMap = endLogStream
                 .collect(Collectors.toMap(logAbbreviation, logData));
         endLogStream.close();
@@ -55,7 +53,8 @@ public class LogsAnalyzer {
                 , abbreviationsMap.get(e.substring(STRING_BEGINNING, ABBREVIATIONS_CHARS_QUANTITY)));
         UnaryOperator<String> addNumeration = e -> addNumeration(e, itemNumber);
         UnaryOperator<String> replaceSeparator = e -> e.replace(INITIAL_SEPARATOR, NEW_SEPARATOR);
-
+        
+        startLogStream = getStreamFromFile(Application.LOG_FILE_PATH + Application.START_LOG);
         startLogStream
                 .map(calculateLapTime)
                 .sorted(Comparator.comparing(cutTheLapTime))
@@ -65,6 +64,10 @@ public class LogsAnalyzer {
                 .reduce((e1, e2) -> e1 + "\n" + e2)
                 .ifPresent(System.out::println);
         startLogStream.close();
+    }
+    
+    public Stream<String> getStreamFromFile(String path) throws IOException {
+        return Files.lines(Paths.get(path));
     }
     
     public String addNumeration(String stringToNumerate, AtomicInteger number) {
@@ -119,6 +122,7 @@ public class LogsAnalyzer {
         return initialList.stream()
             .map(cutTheTeamName)
             .mapToInt(String::length)
-            .max().orElse(0);
+            .max()
+            .orElse(0);
     }
 }
