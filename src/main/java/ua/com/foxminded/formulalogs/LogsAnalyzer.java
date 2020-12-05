@@ -41,11 +41,13 @@ public class LogsAnalyzer {
         Map<String, String> abbreviationsMap = abbrList.stream()
             .map(getAlignedNames)
             .collect(Collectors.toMap(logAbbreviation, logData));
+        //System.out.println(abbreviationsMap);
         
         endLogStream = getStreamFromFile(Application.LOG_FILE_PATH + Application.END_LOG);
         Map<String, String> endLogMap = endLogStream
                 .collect(Collectors.toMap(logAbbreviation, logData));
         endLogStream.close();
+        System.out.println(endLogMap);
         
         UnaryOperator<String> calculateLapTime = e -> calculateTheLapTime(e, endLogMap);
         UnaryOperator<String> cutTheLapTime = e -> e.substring(e.lastIndexOf(SPACE_CHAR), e.length());
