@@ -47,7 +47,7 @@ public class LogsAnalyzer {
         Map<String, String> endLogMap = endLogStream
                 .collect(Collectors.toMap(logAbbreviation, logData));
         endLogStream.close();
-        System.out.println(endLogMap);
+        //System.out.println(endLogMap);
         
         UnaryOperator<String> calculateLapTime = e -> calculateTheLapTime(e, endLogMap);
         UnaryOperator<String> cutTheLapTime = e -> e.substring(e.lastIndexOf(SPACE_CHAR), e.length());
