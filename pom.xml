@@ -4,7 +4,9 @@
   <artifactId>FormulaLogs</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <name>FormulaLogs</name>
-  <description>Read data from 2 files, order racers by time and print report that shows the top 15 racers and the rest after underline</description>
+  <description>Read data from 2 files, order racers by time and print report 
+    that shows the top 15 racers and the rest after underline
+  </description>
   <properties>
         <junit.jupiter.version>5.6.0</junit.jupiter.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
