@@ -15,6 +15,7 @@ jdk:
  - openjdk8
  - openjdk11
 
+script: "mvn cobertura:cobertura"
 
 # Notifications https://docs.travis-ci.com/user/notifications/
 notifications:
