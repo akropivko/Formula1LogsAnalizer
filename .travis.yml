@@ -1,30 +1,19 @@
 # Travis CI Java documentation can be found in:
 # https://docs.travis-ci.com/user/languages/java/
 
-# We will use Ubuntu 18.04 (bionic beaver). List of options:
-# https://docs.travis-ci.com/user/reference/overview/#linux
-dist: xenial
-
 # This enables the 'defaults' to test java applications:
 language: java
+
+#use simple (fast) mode to build to project 
+sudo: false 
 
 # We can specify a list of JDKs to be used for testing
 # A list of available JDKs in Trusty can be seed in:
 # https://docs.travis-ci.com/user/reference/xenial/#jvm-clojure-groovy-java-scala-support
 jdk:
  - openjdk8
- - openjdk11
 
 #script: "mvn cobertura:cobertura"
-
-# Notifications https://docs.travis-ci.com/user/notifications/
-notifications:
-  email:
-    recipients:
-      - akropivko@gmail.com
-    on_success: always # default: change
-    on_failure: always # default: always
-
 
 # Each job in Travis CI has several steps:
 # https://docs.travis-ci.com/user/job-lifecycle/
@@ -36,3 +25,13 @@ notifications:
 # If a build is successful, the code is submitted for coverage analysis
 after_success:
   - bash <(curl -s https://codecov.io/bash)
+
+# Notifications https://docs.travis-ci.com/user/notifications/
+notifications:
+  email:
+    recipients:
+      - akropivko@gmail.com
+    on_success: change # default: change
+    on_failure: always # default: always
+
+
