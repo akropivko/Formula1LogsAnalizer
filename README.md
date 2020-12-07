@@ -1,5 +1,9 @@
 
-[![Build Status](https://travis-ci.com/akropivko/Formula1LogsAnalizer.svg?branch=main)](https://travis-ci.com/akropivko/Formula1LogsAnalizer) 
+[![Build Status](https://travis-ci.com/akropivko/Formula1LogsAnalizer.svg?branch=main)](https://travis-ci.com/akropivko/Formula1LogsAnalizer)
+[![Code Coverage](https://codecov.io/github/akropivko/Formula1LogsAnalizer/coverage.svg)](https://codecov.io/gh/akropivko/Formula1LogsAnalizer) 
+
+[![codecov](https://codecov.io/gh/akropivko/Formula1LogsAnalizer/branch/main/graph/badge.svg?token=UWIG3SZR3I)](https://codecov.io/gh/akropivko/Formula1LogsAnalizer)
+
 [![Coverage Status](https://coveralls.io/repos/github/akropivko/mavenci/badge.svg)](https://coveralls.io/github/akropivko/mavenci)
 
 # FormulaLogs
